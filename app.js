@@ -12,6 +12,7 @@ const auth = require('./middlewares/auth');
 const { errorsAll } = require('./middlewares/errors');
 const { validateCreateUser, validateLogin } = require('./middlewares/validate-req-user');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
+const { limiter } = require('./middlewares/limiter');
 
 process.on('uncaughtException', (err, origin) => {
   console.log(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`);
@@ -23,6 +24,7 @@ const app = express();
 app.use(cors());
 
 app.use(helmet());
+app.use(limiter);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
