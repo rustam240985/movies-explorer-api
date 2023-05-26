@@ -15,7 +15,7 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { limiter } = require('./middlewares/limiter');
 
 process.on('uncaughtException', (err, origin) => {
-  console.log(`${origin} ${err.name} c текстом ${err.message} не была обработана. Обратите внимание!`);
+  console.log(`${origin} ${err.name} c текстом ${err.message} не была обработан. Обратите внимание!`);
 });
 
 const { PORT = 3000 } = process.env;
