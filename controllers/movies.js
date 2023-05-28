@@ -2,9 +2,9 @@ const Movie = require('../models/movie');
 const DelMovieError = require('../errors/delete-movie-err');
 const NotFoundError = require('../errors/not-found-err');
 const ValidationError = require('../errors/validation-error');
-
-const errorDataNull = new Error('Карточка по указанному _id не найдена.');
-errorDataNull.name = 'NullError';
+const {
+  messageNullMovie, messageErrDelMovie, messageErrId, messageErrValidate, messageDelMovie,
+} = require('../utils/constants');
 
 const createMovie = (req, res, next) => {
   const { _id } = req.user;
@@ -28,11 +28,13 @@ const createMovie = (req, res, next) => {
     owner: _id,
   })
     .then((movie) => {
-      movie.populate('owner').then((moviePop) => res.send(moviePop));
+      movie.populate('owner')
+        .then((moviePop) => res.send(moviePop))
+        .catch(next);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при создании карточки'));
+        next(new ValidationError(`${messageErrValidate} фильма`));
       } else {
         next(err);
       }
@@ -40,7 +42,9 @@ const createMovie = (req, res, next) => {
 };
 
 const getMovies = (req, res, next) => {
-  Movie.find({})
+  const { _id: ownerId } = req.user;
+
+  Movie.find({ owner: ownerId })
     .populate('owner')
     .then((movies) => res.send(movies.reverse()))
     .catch(next);
@@ -53,19 +57,19 @@ const deleteMovie = (req, res, next) => {
   Movie.findById({ _id: movieId })
     .then((movie) => {
       if (!movie) {
-        throw new NotFoundError('Карточка с таким _id не найдена.');
+        throw new NotFoundError(messageNullMovie);
       }
       if (movie.owner.toString() !== ownerId) {
-        throw new DelMovieError('Можно удалять только собственные посты');
+        throw new DelMovieError(messageErrDelMovie);
       }
       movie.deleteOne().then(() => {
-        res.send({ message: 'Пост удален' });
+        res.send({ message: messageDelMovie });
       })
         .catch(next);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new ValidationError('Передан некорректный id карточки'));
+        next(new ValidationError(`${messageErrId} фильма`));
       } else {
         next(err);
       }

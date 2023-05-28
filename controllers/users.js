@@ -8,6 +8,9 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const ValidationError = require('../errors/validation-error');
 const DuplicateKeyError = require('../errors/duplicate-key-error');
+const {
+  messageErrValidate, messageErrDuplicate, messageErrId, messageNullUser,
+} = require('../utils/constants');
 
 const createUser = (req, res, next) => {
   const {
@@ -32,9 +35,9 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        next(new DuplicateKeyError('Пользователь с таким email уже существует'));
+        next(new DuplicateKeyError(messageErrDuplicate));
       } else if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные при создании пользователя'));
+        next(new ValidationError(messageErrValidate));
       } else {
         next(err);
       }
@@ -59,7 +62,7 @@ const getCurrentUser = (req, res, next) => {
   User.findById(_id)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь не найден.');
+        throw new NotFoundError(messageNullUser);
       }
       const {
         name,
@@ -72,7 +75,7 @@ const getCurrentUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new ValidationError('Передан некорректный id'));
+        next(new ValidationError(messageErrId));
       } else {
         next(err);
       }
@@ -92,8 +95,10 @@ const updateUser = (req, res, next) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Передан некорректные данные при обновлении профиля'));
+      if (err.code === 11000) {
+        next(new DuplicateKeyError(messageErrDuplicate));
+      } else if (err.name === 'ValidationError') {
+        next(new ValidationError(messageErrValidate));
       } else {
         next(err);
       }
